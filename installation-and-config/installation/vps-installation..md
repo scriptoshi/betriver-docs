@@ -8,7 +8,9 @@ description: If you plan to use a machine from Digital Ocean / Vultr ETC.
 
 #### Step-by-Step Installation Instructions for Betn on a VPS
 
-**Prerequisites:**
+Before you start. Login into your new webserver/vps using bash, cmd, or Terminal.
+
+**Prerequisites: Install the the following.**
 
 1. **LAMP Stack**: Make sure you have a LAMP (Linux, Apache, MySQL, PHP) server setup. This setup includes: ([Server Requirement](server-requirements.md)s for full list)
    * **Linux** (Ubuntu or CentOS, for instance)
@@ -19,6 +21,8 @@ description: If you plan to use a machine from Digital Ocean / Vultr ETC.
 
     * **Composer**: A dependency manager for PHP, required to install PHP packages.
     * **Node.js and NPM**: Node Package Manager, required for frontend assets.\\
+
+
 
 
 
@@ -145,16 +149,90 @@ Open your browser and navigate to your site’s URL (e.g., `http://betriver.io`)
 
 
 
-## BACKGROUND SERVICES.
+## Configure CRON <a href="#configure-cron" id="configure-cron"></a>
 
-You need to setup supervisor to run queue:work and reverb:start. We include a  bash script to get you up and running. make sure you are in your site directory. This will rig ans start all the supervisor processes needed to get the site up and running.\
+**Option 1: Using Crontab**
 
+1. Open your crontab file:
 
-```bash
-#cd to your site directory EG.cd /var/www/yoursite.com
+Copy
+
+```
+crontab -u www-data -e
+```
+
+1. Add this line to run the scheduler every minute:
+
+Copy
+
+```
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Replace `/path-to-your-project` with your project path. _**(Not the public directory)**_
+
+**Option 2: Using System Crontab**
+
+1. Create a new file in `/etc/cron.d/`:
+
+Copy
+
+```
+sudo nano /etc/cron.d/laravel-scheduler
+```
+
+1. Add the following line:
+
+Copy
+
+```
+* * * * * www-data cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+1. Set proper permissions:
+
+Copy
+
+```
+sudo chmod 644 /etc/cron.d/laravel-scheduler
+```
+
+## SETUP LARAVEL REVERB. <a href="#setup-laravel-reverb" id="setup-laravel-reverb"></a>
+
+You need to setup supervisor to run and monitor laravel reverb. We include a bash script to get you up and running without having to manually setup everything. make sure you are in your site directory. This will rig and start all the supervisor processes needed to get reverb up and running. correctly
+
+Copy
+
+```
+#cd to your site directory EG.cd /var/www/betriver.com
 cd /var/www/betriver.io
-chmod +x supervisord.sh
-sudo ./supervisord.sh
+chmod +x laravel-reverb-setup.sh
+sudo bash ./laravel-reverb-setup.sh
+```
+
+***
+
+Update `.env`
+
+Copy
+
+```
+#update REVERB_HOST with your plain domain.
+#Donot add a slash after or http(s). eg scriptoshi.com, betriver.website.com etc
+REVERB_HOST="scriptoshi.com"
+```
+
+#### Laravel Queue Workers. <a href="#laravel-queue-workers" id="laravel-queue-workers"></a>
+
+The app users queues for events for Jobs, Events and Notification. Queue workers are monitored by supervisord. We have created bash script that will configure supervisord to monitor your queues. here's how to run it.
+
+Copy
+
+```
+#cd to your site directory EG.cd /var/www/betriver.com
+cd /var/www/betriver.com
+chmod +x queue-worker-setup.sh
+sudo bash./queue-worker-setup.sh
 ```
 
 
